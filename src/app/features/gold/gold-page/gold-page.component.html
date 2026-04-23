@@ -1,0 +1,61 @@
+<div class="gold-page">
+  <header class="page-header">
+    <h1>Gold Price</h1>
+    <p class="subtitle">COMEX Gold Futures (GC=F) · USD / troy oz</p>
+  </header>
+
+  <div class="controls">
+    <div class="range-group">
+      @for (range of ranges; track range.label) {
+        <button
+          class="range-btn"
+          [class.active]="selectedRange() === range.days"
+          (click)="onRangeChange(range.days)"
+        >
+          {{ range.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (!loading() && !error() && priceHistory().length > 0) {
+    <div class="stats">
+      <div class="stat-card">
+        <span class="stat-label">Close (USD)</span>
+        <span class="stat-value">${{ formatPrice(lastPrice()) }}</span>
+      </div>
+      <div class="stat-card" [class.positive]="change() >= 0" [class.negative]="change() < 0">
+        <span class="stat-label">Period Change</span>
+        <span class="stat-value">
+          {{ change() >= 0 ? '+' : '' }}{{ changePct() | number: '1.2-2' }}%
+        </span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Period High</span>
+        <span class="stat-value">${{ formatPrice(periodHigh()) }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Period Low</span>
+        <span class="stat-value">${{ formatPrice(periodLow()) }}</span>
+      </div>
+    </div>
+  }
+
+  <div class="chart-wrapper">
+    @if (loading()) {
+      <div class="overlay">
+        <div class="spinner"></div>
+        <span>Loading price data…</span>
+      </div>
+    }
+    @if (error()) {
+      <div class="overlay error-overlay">
+        <span>{{ error() }}</span>
+      </div>
+    }
+    <canvas
+      #chartCanvas
+      [class.hidden]="loading() || !!error() || !priceHistory().length"
+    ></canvas>
+  </div>
+</div>
