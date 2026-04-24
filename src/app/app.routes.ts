@@ -7,4 +7,9 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./features/gold/gold.routes').then(m => m.GOLD_ROUTES),
   },
+  {
+    path: 'bitcoin',
+    loadChildren: () =>
+      import('./features/bitcoin/bitcoin.routes').then(m => m.BITCOIN_ROUTES),
+  },
 ];
