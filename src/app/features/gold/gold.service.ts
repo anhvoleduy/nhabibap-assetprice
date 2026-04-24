@@ -8,6 +8,24 @@ export interface PricePoint {
   close: number;
 }
 
+export interface DcaEntry {
+  date: string;
+  price: number;
+  ozBought: number;
+  cumOz: number;
+  cumInvested: number;
+  portfolioValue: number;
+}
+
+export interface DcaResult {
+  entries: DcaEntry[];
+  totalInvested: number;
+  totalOz: number;
+  currentValue: number;
+  gainLoss: number;
+  gainLossPct: number;
+}
+
 interface CurrencyApiResponse {
   date: string;
   xau: Record<string, number>;
@@ -39,6 +57,45 @@ export class GoldService {
           .sort((a, b) => a.date.localeCompare(b.date)),
       ),
     );
+  }
+
+  getDcaPrices(startDate: string, frequency: 'weekly' | 'monthly'): Observable<PricePoint[]> {
+    const dates = this.buildDcaDates(startDate, frequency);
+    if (!dates.length) return of([]);
+
+    const requests = dates.map(date =>
+      this.http
+        .get<CurrencyApiResponse>(`${this.BASE}@${date}/v1/currencies/xau.min.json`)
+        .pipe(
+          map(r => ({ date: r.date ?? date, close: r.xau['usd'] ?? 0 })),
+          catchError(() => of(null)),
+        ),
+    );
+
+    return forkJoin(requests).pipe(
+      map(results =>
+        results
+          .filter((r): r is PricePoint => r !== null && r.close > 0)
+          .sort((a, b) => a.date.localeCompare(b.date)),
+      ),
+    );
+  }
+
+  private buildDcaDates(startDate: string, frequency: 'weekly' | 'monthly'): string[] {
+    const dates: string[] = [];
+    const current = new Date(startDate + 'T00:00:00');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    while (current <= today) {
+      dates.push(current.toISOString().split('T')[0]);
+      if (frequency === 'weekly') {
+        current.setDate(current.getDate() + 7);
+      } else {
+        current.setMonth(current.getMonth() + 1);
+      }
+    }
+    return dates;
   }
 
   private buildDateRange(days: number, step: number): string[] {

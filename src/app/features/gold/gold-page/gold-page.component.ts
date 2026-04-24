@@ -10,6 +10,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   CategoryScale,
   Chart,
@@ -21,7 +22,7 @@ import {
   PointElement,
   Tooltip,
 } from 'chart.js';
-import { GoldService, PricePoint } from '../gold.service';
+import { GoldService, PricePoint, DcaResult } from '../gold.service';
 
 Chart.register(CategoryScale, LinearScale, LineController, PointElement, LineElement, Tooltip, Legend, Filler);
 
@@ -67,6 +68,20 @@ export class GoldPageComponent {
 
   readonly canvasRef = viewChild<ElementRef<HTMLCanvasElement>>('chartCanvas');
 
+  readonly dcaStartDate = signal(this.oneYearAgo());
+  readonly dcaAmount = signal(100);
+  readonly dcaFrequency = signal<'weekly' | 'monthly'>('monthly');
+  readonly dcaResult = signal<DcaResult | null>(null);
+  readonly dcaLoading = signal(false);
+  readonly dcaError = signal<string | null>(null);
+
+  readonly maxDcaDate = new Date().toISOString().split('T')[0];
+  readonly minDcaDate = (() => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() - 10);
+    return d.toISOString().split('T')[0];
+  })();
+
   private chart: Chart | null = null;
 
   constructor() {
@@ -105,6 +120,73 @@ export class GoldPageComponent {
 
   formatPrice(value: number): string {
     return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  onDcaDateChange(e: Event): void {
+    this.dcaStartDate.set((e.target as HTMLInputElement).value);
+  }
+
+  onDcaAmountChange(e: Event): void {
+    const v = parseFloat((e.target as HTMLInputElement).value);
+    if (!isNaN(v) && v > 0) this.dcaAmount.set(v);
+  }
+
+  onDcaFrequencyChange(freq: 'weekly' | 'monthly'): void {
+    this.dcaFrequency.set(freq);
+  }
+
+  runSimulation(): void {
+    const startDate = this.dcaStartDate();
+    const amount = this.dcaAmount();
+    const frequency = this.dcaFrequency();
+    if (!startDate || amount <= 0) return;
+
+    this.dcaLoading.set(true);
+    this.dcaError.set(null);
+    this.dcaResult.set(null);
+
+    this.goldService
+      .getDcaPrices(startDate, frequency)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: prices => {
+          if (!prices.length) {
+            this.dcaError.set('No price data found for the selected date range.');
+            this.dcaLoading.set(false);
+            return;
+          }
+
+          let cumOz = 0;
+          let cumInvested = 0;
+          const entries = prices.map(p => {
+            const ozBought = amount / p.close;
+            cumOz += ozBought;
+            cumInvested += amount;
+            return { date: p.date, price: p.close, ozBought, cumOz, cumInvested, portfolioValue: cumOz * p.close };
+          });
+
+          const last = entries.at(-1)!;
+          this.dcaResult.set({
+            entries,
+            totalInvested: last.cumInvested,
+            totalOz: last.cumOz,
+            currentValue: last.portfolioValue,
+            gainLoss: last.portfolioValue - last.cumInvested,
+            gainLossPct: ((last.portfolioValue - last.cumInvested) / last.cumInvested) * 100,
+          });
+          this.dcaLoading.set(false);
+        },
+        error: () => {
+          this.dcaError.set('Failed to fetch price data.');
+          this.dcaLoading.set(false);
+        },
+      });
+  }
+
+  private oneYearAgo(): string {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() - 1);
+    return d.toISOString().split('T')[0];
   }
 
   private renderChart(canvas: HTMLCanvasElement, data: PricePoint[]): void {

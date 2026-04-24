@@ -58,4 +58,114 @@
       [class.hidden]="loading() || !!error() || !priceHistory().length"
     ></canvas>
   </div>
+
+  <section class="dca-section">
+    <h2 class="dca-title">DCA Simulator</h2>
+    <p class="dca-subtitle">Simulate investing a fixed amount of USD into gold on a recurring schedule from a past date.</p>
+
+    <div class="dca-form">
+      <div class="field-group">
+        <label class="field-label" for="dca-start">Start Date</label>
+        <input
+          id="dca-start"
+          type="date"
+          class="field-input"
+          [value]="dcaStartDate()"
+          [min]="minDcaDate"
+          [max]="maxDcaDate"
+          (input)="onDcaDateChange($event)"
+        />
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="dca-amount">Amount (USD)</label>
+        <input
+          id="dca-amount"
+          type="number"
+          class="field-input"
+          [value]="dcaAmount()"
+          min="1"
+          step="50"
+          (input)="onDcaAmountChange($event)"
+        />
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Frequency</label>
+        <div class="freq-group">
+          <button
+            class="freq-btn"
+            [class.active]="dcaFrequency() === 'monthly'"
+            (click)="onDcaFrequencyChange('monthly')"
+          >Monthly</button>
+          <button
+            class="freq-btn"
+            [class.active]="dcaFrequency() === 'weekly'"
+            (click)="onDcaFrequencyChange('weekly')"
+          >Weekly</button>
+        </div>
+      </div>
+
+      <button class="simulate-btn" (click)="runSimulation()" [disabled]="dcaLoading()">
+        @if (dcaLoading()) { Calculating… } @else { Simulate }
+      </button>
+    </div>
+
+    @if (dcaError()) {
+      <p class="dca-error">{{ dcaError() }}</p>
+    }
+
+    @if (dcaResult(); as result) {
+      <div class="dca-stats">
+        <div class="stat-card">
+          <span class="stat-label">Total Invested</span>
+          <span class="stat-value">${{ formatPrice(result.totalInvested) }}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Gold Held</span>
+          <span class="stat-value">{{ result.totalOz | number: '1.4-4' }} oz</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Current Value</span>
+          <span class="stat-value">${{ formatPrice(result.currentValue) }}</span>
+        </div>
+        <div class="stat-card" [class.positive]="result.gainLoss >= 0" [class.negative]="result.gainLoss < 0">
+          <span class="stat-label">Gain / Loss</span>
+          <span class="stat-value">
+            {{ result.gainLoss >= 0 ? '+' : '' }}${{ formatPrice(result.gainLoss) }}
+            ({{ result.gainLoss >= 0 ? '+' : '' }}{{ result.gainLossPct | number: '1.2-2' }}%)
+          </span>
+        </div>
+      </div>
+
+      <div class="dca-table-wrapper">
+        <table class="dca-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Price (USD/oz)</th>
+              <th>Oz Bought</th>
+              <th>Total Oz</th>
+              <th>Total Invested</th>
+              <th>Portfolio Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (entry of result.entries; track entry.date) {
+              <tr>
+                <td>{{ entry.date }}</td>
+                <td>${{ formatPrice(entry.price) }}</td>
+                <td>{{ entry.ozBought | number: '1.4-4' }}</td>
+                <td>{{ entry.cumOz | number: '1.4-4' }}</td>
+                <td>${{ formatPrice(entry.cumInvested) }}</td>
+                <td [class.positive]="entry.portfolioValue >= entry.cumInvested" [class.negative]="entry.portfolioValue < entry.cumInvested">
+                  ${{ formatPrice(entry.portfolioValue) }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
 </div>
