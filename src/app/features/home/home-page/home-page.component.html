@@ -1,0 +1,41 @@
+<div class="home-page">
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="brand">
+        <span class="brand-mark">◈</span>
+        <span class="brand-name">AssetPrice</span>
+      </div>
+      <h1 class="hero-title">Track the assets<br>that matter.</h1>
+      <p class="hero-sub">
+        Live prices, historical charts, and DCA simulators for gold, Bitcoin, and major currencies.
+      </p>
+    </div>
+  </header>
+
+  <main class="main">
+    <p class="section-label">Choose an asset</p>
+    <div class="card-grid">
+      @for (asset of assets; track asset.id) {
+        <a class="asset-card" [routerLink]="asset.route" [style.--accent]="asset.accentColor" [style.--bg]="asset.bgColor">
+          <div class="card-icon-wrap">
+            <span class="card-icon">{{ asset.icon }}</span>
+          </div>
+          <div class="card-body">
+            <h2 class="card-name">{{ asset.name }}</h2>
+            <p class="card-desc">{{ asset.description }}</p>
+          </div>
+          <span class="card-cta">
+            Explore
+            <svg class="cta-arrow" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </a>
+      }
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>Price data sourced from public market APIs &middot; For informational purposes only</p>
+  </footer>
+</div>
