@@ -1,0 +1,207 @@
+<div class="etf-page">
+  <header class="page-header">
+    <h1>VN-Index ETFs</h1>
+    <p class="subtitle">Price in VND</p>
+  </header>
+
+  <div class="picker-header">
+    <input
+      type="search"
+      class="etf-search"
+      placeholder="Filter by code, name or index…"
+      [value]="searchQuery()"
+      (input)="onSearchChange($event)"
+    />
+    @if (!etfListLoading() && filteredEtfs().length === 0) {
+      <span class="no-match">No ETFs match "{{ searchQuery() }}"</span>
+    }
+  </div>
+
+  <div class="etf-picker">
+    @if (etfListLoading()) {
+      @for (i of [1,2,3,4,5,6,7]; track i) {
+        <div class="etf-btn etf-btn--skeleton"></div>
+      }
+    } @else {
+      @for (etf of filteredEtfs(); track etf.code) {
+        <button
+          class="etf-btn"
+          [class.active]="selectedEtf()?.code === etf.code"
+          (click)="onEtfChange(etf)"
+        >
+          <span class="etf-code">{{ etf.code }}</span>
+          <span class="etf-label">{{ etf.label }}</span>
+          <span class="etf-index">{{ etf.index }}</span>
+        </button>
+      }
+    }
+  </div>
+
+  <div class="controls">
+    <div class="range-group">
+      @for (range of ranges; track range.label) {
+        <button
+          class="range-btn"
+          [class.active]="selectedRange() === range.days"
+          (click)="onRangeChange(range.days)"
+        >
+          {{ range.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (!loading() && !error() && priceHistory().length > 0) {
+    <div class="stats">
+      <div class="stat-card">
+        <span class="stat-label">{{ selectedEtf()?.code ?? '' }} Price</span>
+        <span class="stat-value">₫{{ formatVnd(lastPrice()) }}</span>
+      </div>
+      <div class="stat-card" [class.positive]="change() >= 0" [class.negative]="change() < 0">
+        <span class="stat-label">Period Change</span>
+        <span class="stat-value">
+          {{ change() >= 0 ? '+' : '' }}{{ changePct() | number: '1.2-2' }}%
+        </span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Period High</span>
+        <span class="stat-value">₫{{ formatVnd(periodHigh()) }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Period Low</span>
+        <span class="stat-value">₫{{ formatVnd(periodLow()) }}</span>
+      </div>
+    </div>
+  }
+
+  <div class="chart-wrapper">
+    @if (loading()) {
+      <div class="overlay">
+        <div class="spinner"></div>
+        <span>Loading price data…</span>
+      </div>
+    }
+    @if (error()) {
+      <div class="overlay error-overlay">
+        <span>{{ error() }}</span>
+      </div>
+    }
+    <canvas
+      #chartCanvas
+      [class.hidden]="loading() || !!error() || !priceHistory().length"
+    ></canvas>
+  </div>
+
+  <section class="dca-section">
+    <h2 class="dca-title">DCA Simulator</h2>
+    <p class="dca-subtitle">
+      Simulate investing a fixed amount of VND into {{ selectedEtf()?.label }}
+      ({{ selectedEtf()?.code }}) on a recurring schedule from a past date.
+    </p>
+
+    <div class="dca-form">
+      <div class="field-group">
+        <label class="field-label" for="dca-start">Start Date</label>
+        <input
+          id="dca-start"
+          type="date"
+          class="field-input"
+          [value]="dcaStartDate()"
+          [min]="minDcaDate"
+          [max]="maxDcaDate"
+          (input)="onDcaDateChange($event)"
+        />
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="dca-amount">Amount (VND)</label>
+        <input
+          id="dca-amount"
+          type="number"
+          class="field-input"
+          [value]="dcaAmount()"
+          min="100000"
+          step="500000"
+          (input)="onDcaAmountChange($event)"
+        />
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Frequency</label>
+        <div class="freq-group">
+          <button
+            class="freq-btn"
+            [class.active]="dcaFrequency() === 'monthly'"
+            (click)="onDcaFrequencyChange('monthly')"
+          >Monthly</button>
+          <button
+            class="freq-btn"
+            [class.active]="dcaFrequency() === 'weekly'"
+            (click)="onDcaFrequencyChange('weekly')"
+          >Weekly</button>
+        </div>
+      </div>
+
+      <button class="simulate-btn" (click)="runSimulation()" [disabled]="dcaLoading()">
+        @if (dcaLoading()) { Calculating… } @else { Simulate }
+      </button>
+    </div>
+
+    @if (dcaError()) {
+      <p class="dca-error">{{ dcaError() }}</p>
+    }
+
+    @if (dcaResult(); as result) {
+      <div class="dca-stats">
+        <div class="stat-card">
+          <span class="stat-label">Total Invested</span>
+          <span class="stat-value">₫{{ formatVnd(result.totalInvested) }}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">{{ selectedEtf()?.code }} Units</span>
+          <span class="stat-value">{{ formatUnits(result.totalUnits) }}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Current Value</span>
+          <span class="stat-value">₫{{ formatVnd(result.currentValue) }}</span>
+        </div>
+        <div class="stat-card" [class.positive]="result.gainLoss >= 0" [class.negative]="result.gainLoss < 0">
+          <span class="stat-label">Gain / Loss</span>
+          <span class="stat-value">
+            {{ result.gainLoss >= 0 ? '+' : '' }}₫{{ formatVnd(result.gainLoss) }}
+            ({{ result.gainLoss >= 0 ? '+' : '' }}{{ result.gainLossPct | number: '1.2-2' }}%)
+          </span>
+        </div>
+      </div>
+
+      <div class="dca-table-wrapper">
+        <table class="dca-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Price (VND)</th>
+              <th>Units Bought</th>
+              <th>Total Units</th>
+              <th>Total Invested</th>
+              <th>Portfolio Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (entry of result.entries; track entry.date) {
+              <tr>
+                <td>{{ entry.date }}</td>
+                <td>₫{{ formatVnd(entry.price) }}</td>
+                <td>{{ formatUnits(entry.unitsBought) }}</td>
+                <td>{{ formatUnits(entry.cumUnits) }}</td>
+                <td>₫{{ formatVnd(entry.cumInvested) }}</td>
+                <td [class.positive]="entry.portfolioValue >= entry.cumInvested" [class.negative]="entry.portfolioValue < entry.cumInvested">
+                  ₫{{ formatVnd(entry.portfolioValue) }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</div>

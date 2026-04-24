@@ -21,4 +21,9 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./features/fiat/fiat.routes').then(m => m.FIAT_ROUTES),
   },
+  {
+    path: 'etf',
+    loadChildren: () =>
+      import('./features/etf/etf.routes').then(m => m.ETF_ROUTES),
+  },
 ];

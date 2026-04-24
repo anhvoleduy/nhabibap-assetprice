@@ -48,5 +48,14 @@ export class HomePageComponent {
       accentColor: '#3b82f6',
       bgColor: '#eff6ff',
     },
+    {
+      id: 'etf',
+      icon: '📈',
+      name: 'VN-Index ETFs',
+      description: 'Track price history of major Vietnamese ETFs listed on the Ho Chi Minh Stock Exchange.',
+      route: '/etf',
+      accentColor: '#0d9488',
+      bgColor: '#f0fdfa',
+    },
   ];
 }
