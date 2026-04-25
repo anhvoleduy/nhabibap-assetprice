@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const segments = req.query.path;
   const path = Array.isArray(segments) ? segments.join('/') : (segments ?? '');
 
