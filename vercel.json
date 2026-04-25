@@ -3,6 +3,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist/nhabibap-assetprice/browser",
   "rewrites": [
+    { "source": "/api/hsx/:path*", "destination": "https://api.hsx.vn/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
