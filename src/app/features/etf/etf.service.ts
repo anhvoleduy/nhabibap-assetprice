@@ -32,15 +32,26 @@ export interface VnEtf {
   index: string;
 }
 
-interface HsxEtfItem {
-  code: string;
-  name: string;
-  refIndex: string | null;
-}
-
-interface HsxEtfListResponse {
-  data: { list: HsxEtfItem[]; total: number };
-}
+const VN_ETF_LIST: VnEtf[] = [
+  { code: 'E1VFVN30', label: 'DCVFMVN30', index: 'VN30' },
+  { code: 'FUEABVND', label: 'ABFVN DIAMOND', index: 'VN DIAMOND' },
+  { code: 'FUEBFVND', label: 'BVFVN DIAMOND', index: 'VNDIAMOND' },
+  { code: 'FUEDCMID', label: 'DCVFMVNMIDCAP', index: 'VNMIDCAP' },
+  { code: 'FUEFCV50', label: 'FPT CAPITAL VNX50', index: 'VNX50' },
+  { code: 'FUEIP100', label: 'IPAAM VN100', index: 'VN100' },
+  { code: 'FUEKIV30', label: 'KIM Growth VN30', index: 'VN30' },
+  { code: 'FUEKIVFS', label: 'KIM Growth VNFINSELECT', index: 'VNFINSELECT' },
+  { code: 'FUEKIVND', label: 'KIM GROWTH VN DIAMOND', index: 'VN DIAMOND' },
+  { code: 'FUEMAV30', label: 'MAFM VN30', index: 'VN30' },
+  { code: 'FUEMAVND', label: 'MAFM VNDIAMOND', index: 'VNDIAMOND' },
+  { code: 'FUESSV30', label: 'SSIAM VN30', index: 'VN30' },
+  { code: 'FUESSV50', label: 'SSIAM VNX50', index: 'VNX50' },
+  { code: 'FUESSVFL', label: 'SSIAM VNFIN LEAD', index: 'VNFIN LEAD' },
+  { code: 'FUETCC50', label: 'TECHCOM CAPITAL VNX50', index: 'VNX50' },
+  { code: 'FUETPVND', label: 'VFCVN DIAMOND', index: 'VND' },
+  { code: 'FUEVFVND', label: 'DCVFMVN DIAMOND', index: 'VN DIAMOND' },
+  { code: 'FUEVN100', label: 'VINACAPITAL VN100', index: 'VN100' },
+];
 
 interface HsxBar {
   reportdate: number;
@@ -59,20 +70,7 @@ export class EtfService {
   private http = inject(HttpClient);
 
   getEtfList(): Observable<VnEtf[]> {
-    return this.http
-      .get<HsxEtfListResponse>('/api/hsx/l/api/v1/1/securities/etf', {
-        params: { pageIndex: '1', pageSize: '100', alphabet: '' },
-      })
-      .pipe(
-        map(r =>
-          (r.data?.list ?? []).map(item => ({
-            code: item.code,
-            label: item.name.replace(/^Quỹ ETF\s*/i, '').trim(),
-            index: (item.refIndex ?? '').replace(/\s*Index$/i, '').trim(),
-          })),
-        ),
-        catchError(() => of([])),
-      );
+    return of(VN_ETF_LIST);
   }
 
   getPriceHistory(ticker: string, days: number): Observable<PricePoint[]> {
