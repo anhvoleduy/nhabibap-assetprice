@@ -26,4 +26,9 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./features/etf/etf.routes').then(m => m.ETF_ROUTES),
   },
+  {
+    path: 'sjc',
+    loadChildren: () =>
+      import('./features/sjc/sjc.routes').then(m => m.SJC_ROUTES),
+  },
 ];

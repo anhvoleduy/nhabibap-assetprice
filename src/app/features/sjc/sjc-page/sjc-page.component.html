@@ -1,0 +1,181 @@
+<div class="sjc-page">
+  <header class="page-header">
+    <h1>Vàng SJC</h1>
+    <p class="subtitle">Giá vàng SJC 9999 · ₫ / lượng (37.5g) · 30 ngày gần nhất</p>
+  </header>
+
+  @if (!loading() && !error() && priceHistory().length > 0) {
+    <div class="stats">
+      <div class="stat-card">
+        <span class="stat-label">Giá Bán Ra (₫)</span>
+        <span class="stat-value">{{ formatVndM(lastBuy()) }}M</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Giá Mua Vào (₫)</span>
+        <span class="stat-value">{{ formatVndM(lastSell()) }}M</span>
+      </div>
+      <div class="stat-card" [class.positive]="change() >= 0" [class.negative]="change() < 0">
+        <span class="stat-label">Thay Đổi 30 Ngày</span>
+        <span class="stat-value">
+          {{ change() >= 0 ? '+' : '' }}{{ changePct() | number: '1.2-2' }}%
+        </span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Chênh Lệch Mua/Bán</span>
+        <span class="stat-value">{{ spread() | number: '1.2-2' }}%</span>
+      </div>
+    </div>
+  }
+
+  <div class="chart-wrapper">
+    @if (loading()) {
+      <div class="overlay">
+        <div class="spinner"></div>
+        <span>Đang tải dữ liệu giá…</span>
+      </div>
+    }
+    @if (error()) {
+      <div class="overlay error-overlay">
+        <span>{{ error() }}</span>
+      </div>
+    }
+    <canvas
+      #chartCanvas
+      [class.hidden]="loading() || !!error() || !priceHistory().length"
+    ></canvas>
+  </div>
+
+  <p class="data-source">Nguồn giá lịch sử: vang.today · Cập nhật mỗi 5 phút</p>
+
+  <section class="dca-section">
+    <h2 class="dca-title">Mô Phỏng DCA</h2>
+    <p class="dca-subtitle">
+      Mua vàng định kỳ theo số lượng cố định. Chi phí mỗi kỳ = số lượng × giá bán ra; lợi nhuận tính theo giá mua vào. Nguồn: vang.today.
+    </p>
+
+    <div class="dca-form">
+      <div class="field-group">
+        <label class="field-label" for="dca-start">Ngày Bắt Đầu</label>
+        <input
+          id="dca-start"
+          type="date"
+          class="field-input"
+          [value]="dcaStartDate()"
+          [min]="minDcaDate"
+          [max]="maxDcaDate"
+          (input)="onDcaDateChange($event)"
+        />
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="dca-quantity">Số Lượng Mỗi Kỳ</label>
+        <input
+          id="dca-quantity"
+          type="number"
+          class="field-input field-input--qty"
+          [value]="dcaQuantity()"
+          min="0.1"
+          step="0.1"
+          (input)="onDcaQuantityChange($event)"
+        />
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Đơn Vị</label>
+        <div class="freq-group">
+          <button
+            class="freq-btn"
+            [class.active]="dcaUnit() === 'chi'"
+            (click)="onDcaUnitChange('chi')"
+          >Chỉ</button>
+          <button
+            class="freq-btn"
+            [class.active]="dcaUnit() === 'luong'"
+            (click)="onDcaUnitChange('luong')"
+          >Lượng</button>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Chu Kỳ</label>
+        <div class="freq-group">
+          <button
+            class="freq-btn"
+            [class.active]="dcaFrequency() === 'monthly'"
+            (click)="onDcaFrequencyChange('monthly')"
+          >Hàng Tháng</button>
+          <button
+            class="freq-btn"
+            [class.active]="dcaFrequency() === 'weekly'"
+            (click)="onDcaFrequencyChange('weekly')"
+          >Hàng Tuần</button>
+        </div>
+      </div>
+
+      <button class="simulate-btn" (click)="runSimulation()" [disabled]="dcaLoading()">
+        @if (dcaLoading()) { Đang tải… } @else { Mô Phỏng }
+      </button>
+    </div>
+
+    @if (dcaError()) {
+      <p class="dca-error">{{ dcaError() }}</p>
+    }
+
+    @if (dcaResult(); as result) {
+      <div class="dca-stats">
+        <div class="stat-card">
+          <span class="stat-label">Vàng Tích Lũy</span>
+          <span class="stat-value">{{ result.totalLuong | number: '1.2-4' }} lượng</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Tổng Chi Phí</span>
+          <span class="stat-value">₫{{ formatVndM(result.totalCost) }}M</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Giá Trị Hiện Tại</span>
+          <span class="stat-value">₫{{ formatVndM(result.currentValue) }}M</span>
+        </div>
+        <div class="stat-card" [class.positive]="result.gainLoss >= 0" [class.negative]="result.gainLoss < 0">
+          <span class="stat-label">Lãi / Lỗ</span>
+          <span class="stat-value">
+            {{ result.gainLoss >= 0 ? '+' : '' }}₫{{ formatVndM(result.gainLoss) }}M
+            ({{ result.gainLoss >= 0 ? '+' : '' }}{{ result.gainLossPct | number: '1.2-2' }}%)
+          </span>
+        </div>
+      </div>
+
+      <div class="dca-table-wrapper">
+        <table class="dca-table">
+          <thead>
+            <tr>
+              <th>Ngày</th>
+              <th>Giá Bán Ra (₫)</th>
+              <th>Giá Mua Vào (₫)</th>
+              <th>Mua (lượng)</th>
+              <th>Tổng Lượng</th>
+              <th>Chi Phí Kỳ (₫)</th>
+              <th>Tổng Chi Phí (₫)</th>
+              <th>Giá Trị Danh Mục (₫)</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (entry of result.entries; track entry.date) {
+              <tr>
+                <td>{{ entry.date }}</td>
+                <td>{{ formatVnd(entry.buyPrice) }}</td>
+                <td>{{ formatVnd(entry.sellPrice) }}</td>
+                <td>{{ entry.luongBought | number: '1.2-4' }}</td>
+                <td>{{ entry.cumLuong | number: '1.2-4' }}</td>
+                <td>{{ formatVnd(entry.periodCost) }}</td>
+                <td>{{ formatVnd(entry.cumCost) }}</td>
+                <td [class.positive]="entry.portfolioValue >= entry.cumCost" [class.negative]="entry.portfolioValue < entry.cumCost">
+                  {{ formatVnd(entry.portfolioValue) }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</div>

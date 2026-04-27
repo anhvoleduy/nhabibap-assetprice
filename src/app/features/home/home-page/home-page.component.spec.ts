@@ -22,8 +22,8 @@ describe('HomePageComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('has 4 asset cards', () => {
-    expect(component.assets.length).toBe(4);
+  it('has 5 asset cards', () => {
+    expect(component.assets.length).toBe(5);
   });
 
   it('includes gold card with correct route', () => {
@@ -48,6 +48,12 @@ describe('HomePageComponent', () => {
     const etf = component.assets.find(a => a.id === 'etf');
     expect(etf).toBeTruthy();
     expect(etf!.route).toBe('/etf');
+  });
+
+  it('includes sjc card with correct route', () => {
+    const sjc = component.assets.find(a => a.id === 'sjc');
+    expect(sjc).toBeTruthy();
+    expect(sjc!.route).toBe('/sjc');
   });
 
   it('each asset card has required fields', () => {

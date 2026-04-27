@@ -1,4 +1,12 @@
 {
+  "/api/vang-today": {
+    "target": "https://www.vang.today",
+    "changeOrigin": true,
+    "secure": true,
+    "pathRewrite": {
+      "^/api/vang-today": ""
+    }
+  },
   "/api/hsx": {
     "target": "https://api.hsx.vn",
     "changeOrigin": true,

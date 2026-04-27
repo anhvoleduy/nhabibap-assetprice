@@ -57,5 +57,14 @@ export class HomePageComponent {
       accentColor: '#0d9488',
       bgColor: '#f0fdfa',
     },
+    {
+      id: 'sjc',
+      icon: '🪙',
+      name: 'Vàng SJC',
+      description: 'Theo dõi giá vàng SJC theo lượng và mô phỏng đầu tư định kỳ với chênh lệch giá mua/bán.',
+      route: '/sjc',
+      accentColor: '#dc8a04',
+      bgColor: '#fffbeb',
+    },
   ];
 }

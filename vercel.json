@@ -4,6 +4,7 @@
   "outputDirectory": "dist/nhabibap-assetprice/browser",
   "rewrites": [
     { "source": "/api/hsx/:path*", "destination": "https://api.hsx.vn/:path*" },
+    { "source": "/api/vang-today/:path*", "destination": "https://www.vang.today/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
