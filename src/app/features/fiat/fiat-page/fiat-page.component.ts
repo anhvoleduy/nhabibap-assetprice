@@ -181,13 +181,14 @@ export class FiatPageComponent {
           });
 
           const last = entries.at(-1)!;
+          const currentValue = last.cumUnits * this.lastPrice();
           this.dcaResult.set({
             entries,
             totalInvested: last.cumInvested,
             totalUnits: last.cumUnits,
-            currentValue: last.portfolioValue,
-            gainLoss: last.portfolioValue - last.cumInvested,
-            gainLossPct: ((last.portfolioValue - last.cumInvested) / last.cumInvested) * 100,
+            currentValue,
+            gainLoss: currentValue - last.cumInvested,
+            gainLossPct: ((currentValue - last.cumInvested) / last.cumInvested) * 100,
           });
           this.dcaLoading.set(false);
         },

@@ -166,13 +166,14 @@ export class GoldPageComponent {
           });
 
           const last = entries.at(-1)!;
+          const currentValue = last.cumOz * this.lastPrice();
           this.dcaResult.set({
             entries,
             totalInvested: last.cumInvested,
             totalOz: last.cumOz,
-            currentValue: last.portfolioValue,
-            gainLoss: last.portfolioValue - last.cumInvested,
-            gainLossPct: ((last.portfolioValue - last.cumInvested) / last.cumInvested) * 100,
+            currentValue,
+            gainLoss: currentValue - last.cumInvested,
+            gainLossPct: ((currentValue - last.cumInvested) / last.cumInvested) * 100,
           });
           this.dcaLoading.set(false);
         },
