@@ -72,13 +72,10 @@ export class SjcPageComponent {
   readonly dcaResult = signal<SjcDcaResult | null>(null);
   readonly dcaLoading = signal(false);
   readonly dcaError = signal<string | null>(null);
+  readonly dcaWarning = signal<string | null>(null);
 
   readonly maxDcaDate = new Date().toISOString().split('T')[0];
-  readonly minDcaDate = (() => {
-    const d = new Date();
-    d.setFullYear(d.getFullYear() - 1);
-    return d.toISOString().split('T')[0];
-  })();
+  readonly minDcaDate = '2022-01-01';
 
   private chart: Chart | null = null;
 
@@ -150,6 +147,7 @@ export class SjcPageComponent {
 
     this.dcaLoading.set(true);
     this.dcaError.set(null);
+    this.dcaWarning.set(null);
     this.dcaResult.set(null);
 
     this.sjcService
@@ -166,6 +164,10 @@ export class SjcPageComponent {
           if (!prices.length) {
             this.dcaError.set('Không có dữ liệu giá cho khoảng thời gian đã chọn.');
             return;
+          }
+
+          if (prices[0].date > startDate) {
+            this.dcaWarning.set(`Dữ liệu chỉ có từ ${prices[0].date}. Mô phỏng bắt đầu từ ngày đó.`);
           }
 
           let cumLuong = 0;

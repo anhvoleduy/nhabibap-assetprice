@@ -294,6 +294,16 @@
   margin: 0 0 1rem;
 }
 
+.dca-warning {
+  color: #b45309;
+  font-size: 0.875rem;
+  margin: 0 0 1rem;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+}
+
 .dca-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

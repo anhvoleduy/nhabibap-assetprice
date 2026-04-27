@@ -121,6 +121,10 @@
       <p class="dca-error">{{ dcaError() }}</p>
     }
 
+    @if (dcaWarning()) {
+      <p class="dca-warning">⚠ {{ dcaWarning() }}</p>
+    }
+
     @if (dcaResult(); as result) {
       <div class="dca-stats">
         <div class="stat-card">
